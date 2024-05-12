@@ -17,12 +17,24 @@ BUTTON_INCOME = '[1] Доходы'
 BUTTON_EXPENSE = '[2] Расходы'
 BUTTON_BACK = '[0] Вернуться в главное меню'
 
+BUTTON_YES_RU = 'Д'
+BUTTON_YES_EN = 'Y'
+BUTTON_NO_RU = 'Н'
+BUTTON_NO_EN = 'N'
+
 
 class Application:
     category_menu = {
         BUTTON_INCOME: 'Доходы',
         BUTTON_EXPENSE: 'Расходы',
         BUTTON_BACK: None
+    }
+
+    continue_menu = {
+        BUTTON_YES_RU: True,
+        BUTTON_YES_EN: True,
+        BUTTON_NO_RU: False,
+        BUTTON_NO_EN: False
     }
 
     def __new__(cls, *args, **kwargs):
@@ -38,11 +50,11 @@ class Application:
 
         return instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.storage = Storage()
         self.wallet = Wallet(self.storage)
 
-    def run(self):
+    def run(self) -> None:
         print('Добро пожаловать!!!')
 
         while True:
@@ -62,16 +74,26 @@ class Application:
                 print(f'{Fore.LIGHTRED_EX}Введенное значение некорректно.')
 
     @staticmethod
-    def show_menu(menu) -> None:
+    def show_menu(menu: list) -> None:
         max_size_option = max(menu, key=lambda item: len(item))
         temp: int = len(max_size_option)
         print('#' * temp, *menu, '#' * temp, sep='\n')
 
-    def display_balance(self):
+    def is_continue(self) -> bool | None:
+        print(f'{Fore.LIGHTGREEN_EX}Операция выполнена.{Style.RESET_ALL}')
+        while True:
+            choice: str = input(f'{Fore.LIGHTBLUE_EX}Продолжить [д/н]? {Style.RESET_ALL}').upper()
+
+            if self.continue_menu.get(choice) is True:
+                return True
+            if self.continue_menu.get(choice) is False:
+                return False
+
+    def display_balance(self) -> None:
         balance = self.wallet.calculate_balance()
         print(f'\n>>> {BUTTON_BALANCE.split(maxsplit=1)[1]}: {Fore.LIGHTGREEN_EX}{balance}')
 
-    def display_history(self):
+    def display_history(self) -> None:
         print(f'\n>>> {BUTTON_HISTORY.split(maxsplit=1)[1]}')
         entries = self.wallet.get_entries()
 
@@ -81,7 +103,7 @@ class Application:
             f'{Fore.LIGHTGREEN_EX}{entries}'
         )
 
-    def create_entry(self):
+    def create_entry(self) -> None:
         while True:
             print(f'\n>>> {BUTTON_CREATE_ENTRY.split(maxsplit=1)[1]}')
             categories_buttons: list = list(self.category_menu.keys())
@@ -108,15 +130,12 @@ class Application:
                 except ValidationError as _ex:
                     print(*[item['msg'] for item in _ex.errors()], sep='\n')
                 else:
-                    choice: str = input(
-                        f'{Fore.LIGHTGREEN_EX}Операция выполнена.{Style.RESET_ALL}\n'
-                        f'{Fore.LIGHTBLUE_EX}Продолжить [д/н]? {Style.RESET_ALL}')
-                    if choice.upper() != 'Д': break
+                    if not self.is_continue(): break
 
             except (ValueError, IndexError):
                 print(f'{Fore.LIGHTRED_EX}Введенное значение некорректно.')
 
-    def remove_entry(self):
+    def remove_entry(self) -> None:
         while True:
             print(f'\n>>> {BUTTON_REMOVE_ENTRY.split(maxsplit=1)[1]}')
             entries = self.wallet.get_entries()
@@ -136,8 +155,4 @@ class Application:
                 if ": ' '" in _ex.args[0]: break
                 print(f'{Fore.LIGHTRED_EX}Введенное значение некорректно.')
             else:
-                choice: str = input(
-                    f'{Fore.LIGHTGREEN_EX}Операция выполнена.{Style.RESET_ALL}\n'
-                    f'{Fore.LIGHTBLUE_EX}Продолжить [д/н]? {Style.RESET_ALL}')
-                if choice.upper() != 'Д': break
-
+                if not self.is_continue(): break
